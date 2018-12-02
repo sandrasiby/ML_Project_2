@@ -12,16 +12,24 @@ NUM_FEATURES = 6
 
 def build_model():
 	
-	''' Keras API Model '''
+	''' Keras API Model '''	
+	# Input layer
 	main_input = Input(shape=(NUM_FEATURES,), name='input')
-	hl_1 = Dense(32, activation='relu')(main_input)
-	hl_1 = Dense(32, activation='relu')(hl_1)
-	hl_1 = Dense(32, activation='relu')(hl_1)
-	hl_1 = Dense(20, activation='relu')(hl_1)
-	hl_1 = Dense(20, activation='relu')(hl_1)
-	output_layer = Dense(7, kernel_initializer='normal')(hl_1)
-
+	
+	# Hidden layers
+	hidden_layer = Dense(32, activation='relu')(main_input)  # Hidden layer 1
+	hidden_layer = Dense(32, activation='relu')(hidden_layer)# Hidden layer 2 
+	hidden_layer = Dense(32, activation='relu')(hidden_layer)# Hidden layer 3
+	hidden_layer = Dense(20, activation='relu')(hidden_layer)# Hidden layer 4
+	hidden_layer = Dense(20, activation='relu')(hidden_layer)# Hidden layer 5
+	
+	# Output layer 
+	output_layer = Dense(7, kernel_initializer='normal')(hidden_layer)
+	
+	# Initialize the model
 	model = Model(inputs=[main_input], outputs=[output_layer])
+	
+	# Assign the optimizer and the loss type, along with the metric to be displayed
 	model.compile(optimizer='adam', loss='mean_absolute_error', metrics=['mse'])
 	print(model.metrics_names)
 
@@ -62,19 +70,29 @@ def standardize_test_minmax(tx,min,max):
 if __name__ == '__main__':
 
 	fv = "featureVec_Refine"
-	ov = "objectiveVec_Refine"
-
+	ov = "ObjectiveVec_Refine"
+	
+	# Get the features and labels
 	features, labels = get_features_labels(fv, ov)
+	
+	# Split the data
 	X_train, X_test, y_train, y_test = train_test_split(features, labels, test_size=.1)
+	
+	# Standardize the test and train data using min-max standardization
 	X_train, mean_train, std_train = standardize_training_minmax(X_train)
 	X_test = standardize_test_minmax(X_test, mean_train, std_train);
 	print(len(X_train), len(y_train), len(X_test), len(y_test))
-	model = build_model()
 	
+	# Train the neural network	
+	model = build_model()
 	model.fit([X_train], [y_train], epochs=2000, batch_size=10)
 	score = model.evaluate(X_test, y_test)
 	print(score)
+	
+	# Get predictions
 	y_pred = model.predict(X_test)
+	
+	# Manually check the error
 	err = abs(y_pred - y_test)*100 / y_test
 	err_max_sample = err.max(1)
 	print('y_pred is:', y_pred)

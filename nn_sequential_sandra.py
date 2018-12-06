@@ -16,12 +16,13 @@ def build_model():
 	# Input layer
 	main_input = Input(shape=(NUM_FEATURES,), name='input')
 	
+	activation_function = 'sigmoid'
 	# Hidden layers
-	hidden_layer = Dense(32, activation='relu')(main_input)  # Hidden layer 1
-	hidden_layer = Dense(32, activation='relu')(hidden_layer)# Hidden layer 2 
-	hidden_layer = Dense(32, activation='relu')(hidden_layer)# Hidden layer 3
-	hidden_layer = Dense(20, activation='relu')(hidden_layer)# Hidden layer 4
-	hidden_layer = Dense(20, activation='relu')(hidden_layer)# Hidden layer 5
+	hidden_layer = Dense(32, activation=activation_function)(main_input)  # Hidden layer 1
+	hidden_layer = Dense(32, activation=activation_function)(hidden_layer)# Hidden layer 2 
+	hidden_layer = Dense(32, activation=activation_function)(hidden_layer)# Hidden layer 3
+	hidden_layer = Dense(20, activation=activation_function)(hidden_layer)# Hidden layer 4
+	hidden_layer = Dense(20, activation=activation_function)(hidden_layer)# Hidden layer 5
 	
 	# Output layer 
 	output_layer = Dense(7, kernel_initializer='normal')(hidden_layer)
@@ -30,7 +31,7 @@ def build_model():
 	model = Model(inputs=[main_input], outputs=[output_layer])
 	
 	# Assign the optimizer and the loss type, along with the metric to be displayed
-	model.compile(optimizer='adam', loss='mean_absolute_error', metrics=['mse'])
+	model.compile(optimizer='adam', loss='mean_squared_error', metrics=['mse'])
 	print(model.metrics_names)
 
 	return model
@@ -76,7 +77,7 @@ if __name__ == '__main__':
 	features, labels = get_features_labels(fv, ov)
 	
 	# Split the data
-	X_train, X_test, y_train, y_test = train_test_split(features, labels, test_size=.1)
+	X_train, X_test, y_train, y_test = train_test_split(features, labels, test_size=.5)
 	
 	# Standardize the test and train data using min-max standardization
 	X_train, mean_train, std_train = standardize_training_minmax(X_train)
@@ -85,7 +86,7 @@ if __name__ == '__main__':
 	
 	# Train the neural network	
 	model = build_model()
-	model.fit([X_train], [y_train], epochs=2000, batch_size=10)
+	model.fit([X_train], [y_train], epochs=3000, batch_size=10)
 	score = model.evaluate(X_test, y_test)
 	print(score)
 	

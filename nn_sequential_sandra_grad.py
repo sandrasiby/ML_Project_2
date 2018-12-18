@@ -12,6 +12,8 @@ from sklearn.metrics import classification_report, accuracy_score, confusion_mat
 from sklearn.model_selection import StratifiedKFold
 from itertools import cycle
 from keras.models import load_model
+from keras.utils.vis_utils import plot_model
+from matplotlib import pyplot as plt
 
 NUM_FEATURES = 6
 
@@ -22,11 +24,14 @@ def run_model(X_train, X_test, y_train, y_test, tag):
 	X_test = standardize_test_minmax(X_test, mean_train, std_train);
 	print(len(X_train), len(y_train), len(X_test), len(y_test))
 
-	# Train the neural network	
+	# Train the neural network
 	model = build_model()
-	model.fit([X_train], [y_train], epochs=1500, batch_size=10)
+	history = model.fit([X_train], [y_train], epochs=1500, batch_size=10)
+	print(history)
+	plt.plot(history.history['mean_squared_error'])
+	plt.show()
 	score = model.evaluate(X_test, y_test)
-	model.save("model_fold_" + tag + ".h5")
+	#model.save("model_fold_" + tag + ".h5")
 	print(score)
 
 	# Get predictions
@@ -53,8 +58,8 @@ def run_model(X_train, X_test, y_train, y_test, tag):
 def cross_validate(features, labels, folds=10):
 
 	results = []
-	feature_sets = np.split(features, folds)
-	label_sets = np.split(labels, folds)
+	feature_sets = np.array_split(features, folds)
+	label_sets = np.array_split(labels, folds)
 
 	for i in range(0, folds):
 		X_train = (feature_sets[i:] + feature_sets[:i])[:-1]
@@ -77,9 +82,9 @@ def build_model():
 	# Hidden layers
 	hidden_layer = Dense(32, activation=activation_function)(main_input)  # Hidden layer 1
 	hidden_layer = Dense(32, activation=activation_function)(hidden_layer)# Hidden layer 2 
-	hidden_layer = Dense(32, activation=activation_function)(hidden_layer)# Hidden layer 3
-	hidden_layer = Dense(20, activation=activation_function)(hidden_layer)# Hidden layer 4
-	hidden_layer = Dense(20, activation=activation_function)(hidden_layer)# Hidden layer 5
+	#hidden_layer = Dense(32, activation=activation_function)(hidden_layer)# Hidden layer 3
+	#hidden_layer = Dense(20, activation=activation_function)(hidden_layer)# Hidden layer 4
+	#hidden_layer = Dense(20, activation=activation_function)(hidden_layer)# Hidden layer 5
 	
 	# Output layer 
 	output_layer = Dense(7, kernel_initializer='normal')(hidden_layer)
@@ -89,8 +94,9 @@ def build_model():
 	
 	# Assign the optimizer and the loss type, along with the metric to be displayed
 	model.compile(optimizer='adam', loss='mean_squared_error', metrics=['mse'])
-	print(model.metrics_names)
-
+	#print(model.summary())
+	#plot_model(model, to_file='model_plot.png', show_shapes=True, show_layer_names=True)
+	#print(model.metrics_names)
 	return model
 
 def get_features_labels(fv, ov):
@@ -193,9 +199,9 @@ if __name__ == '__main__':
 	fv = "featureVec_Refine"
 	ov = "ObjectiveVec_Refine"
 	
-	Get the features and labels
+	#Get the features and labels
 	features, labels = get_features_labels(fv, ov)
-	results = cross_validate(features, labels)
+	results = cross_validate(features, labels, folds=10)
 
 	print("All mean errors")
 	for item in results:
